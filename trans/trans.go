@@ -9,11 +9,11 @@ import (
 
 const (
 	MERCHANT = 3
-	AMOUNT  = 5
+	AMOUNT   = 5
 )
 
 type File struct {
-	lines [][]string
+	lines      [][]string
 	totByMerch map[string]int64
 }
 
@@ -29,7 +29,7 @@ func Create(lines [][]string) *File {
 		}
 		m[s[MERCHANT]] += amt
 	}
-	return &File{lines,m,}
+	return &File{lines, m}
 }
 
 func (f *File) NumOfLines() int {
@@ -44,4 +44,9 @@ func (f *File) Print() {
 	for k, v := range f.totByMerch {
 		fmt.Printf("%s: $%.*f\n", k, 2, float64(v)/100)
 	}
+}
+
+//TODO: implement feature to total using filters (month, year, etc.)
+func (f *File) TotalWithFilter(merchant string, filter interface{}) int64 {
+	return 0
 }
