@@ -2,7 +2,6 @@ package trans
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -17,15 +16,18 @@ type File struct {
 	totByMerch map[string]int64
 }
 
-func Create(lines [][]string) *File {
+func Create(lines [][]string, filter Filter) *File {
 	m := make(map[string]int64)
 	for _, s := range lines {
-		if len(s[AMOUNT]) == 0 {
+		if len(s) != 7 {
+			panic("bad data")
+		}
+		if (filter != nil && !filter(s[0])) || len(s[AMOUNT]) == 0 {
 			continue
 		}
 		amt, err := strconv.ParseInt(strings.Replace(s[AMOUNT], ".", "", 1), 10, 64)
 		if err != nil {
-			log.Fatal("can't parse amount: ", err)
+			panic("can't parse amount: ")
 		}
 		m[s[MERCHANT]] += amt
 	}
@@ -40,13 +42,11 @@ func (f *File) Total(merchant string) int64 {
 	return f.totByMerch[merchant]
 }
 
+type Filter func(string) bool
+
+//TODO: modify to print totals by category for all months available in the data set
 func (f *File) Print() {
 	for k, v := range f.totByMerch {
 		fmt.Printf("%s: $%.*f\n", k, 2, float64(v)/100)
 	}
-}
-
-//TODO: implement feature to total using filters (month, year, etc.)
-func (f *File) TotalWithFilter(merchant string, filter interface{}) int64 {
-	return 0
 }

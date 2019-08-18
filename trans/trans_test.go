@@ -35,7 +35,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestTotal(t *testing.T) {
-	a := Create(data)
+	filterByProcessingDt := func(s string) bool {
+		return strings.HasPrefix(s, "2019-07")
+	}
+	a := Create(data, filterByProcessingDt)
 	fmt.Printf("num of lines is %d.\n\n", a.NumOfLines())
 	tot := a.Total("Sunny Cafe - Anyplace USA")
 	if tot != 3432 {
@@ -44,4 +47,31 @@ func TestTotal(t *testing.T) {
 	tot = a.Total("Larry The Cable Guy")
 	fmt.Println(tot)
 	a.Print()
+	filterByProcessingDtAug := func(s string) bool {
+		return strings.HasPrefix(s, "2019-08")
+	}
+	b := Create(data, filterByProcessingDtAug)
+	tot = b.Total("Sunny Cafe - Anyplace USA")
+	if tot != 1321 {
+		t.Errorf("total should be %d but is %d", 1321, tot)
+	}
+	b.Print()
+}
+
+func TestBadData(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("should've failed")
+		}
+	}()
+	Create([][]string{{""}}, nil)
+}
+
+func TestBadData2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("should've failed")
+		}
+	}()
+	Create([][]string{{"", "", "", "", "", "XYZ", ""}}, nil)
 }
