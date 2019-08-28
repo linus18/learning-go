@@ -40,38 +40,58 @@ func TestTotal(t *testing.T) {
 	}
 	a := Create(data, filterByProcessingDt)
 	fmt.Printf("num of lines is %d.\n\n", a.NumOfLines())
-	tot := a.Total("Sunny Cafe - Anyplace USA")
+	tot := a.Crunch()["2019-07"]["Sunny Cafe - Anyplace USA"]
 	if tot != 3432 {
 		t.Errorf("total amount should be %d but is %d", 3432, tot)
 	}
-	tot = a.Total("Larry The Cable Guy")
+	tot = a.Crunch()["2019-07"]["Larry The Cable Guy"]
 	fmt.Println(tot)
-	a.Print()
-	filterByProcessingDtAug := func(s string) bool {
-		return strings.HasPrefix(s, "2019-08")
+	Print(a)
+	if m := a.Crunch()["2019-08"]; m != nil {
+		t.Errorf("data for 2019-08 should be nil but is %v", m)
 	}
-	b := Create(data, filterByProcessingDtAug)
-	tot = b.Total("Sunny Cafe - Anyplace USA")
+	b := Create(data, nil)
+	tot = b.Crunch()["2019-08"]["Sunny Cafe - Anyplace USA"]
 	if tot != 1321 {
 		t.Errorf("total should be %d but is %d", 1321, tot)
 	}
-	b.Print()
+	if m := b.Crunch()["2019-07"]; m == nil {
+		t.Error("data for 2019-07 should not be nil")
+	}
+	Print(b)
 }
 
 func TestBadData(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("should've failed")
-		}
-	}()
-	Create([][]string{{""}}, nil)
+	assertPanic(t, "bad data", func() {
+		Create([][]string{{""}}, nil)
+	})
 }
 
 func TestBadData2(t *testing.T) {
+	assertPanic(t, "can't parse amount", func() {
+		Create([][]string{{"2019-07-01", "", "", "", "", "XYZ", ""}}, nil)
+	})
+}
+
+func assertPanic(t *testing.T, msg string, f func()) {
 	defer func() {
-		if r := recover(); r == nil {
+		err := recover().(error)
+		if err == nil {
 			t.Errorf("should've failed")
 		}
+		if err.Error() != msg {
+			t.Errorf("Wrong panic message: %s,", err.Error())
+		}
 	}()
-	Create([][]string{{"", "", "", "", "", "XYZ", ""}}, nil)
+	f()
+}
+
+func TestCrunch(t *testing.T) {
+	c := Create(data, nil)
+	Print(c)
+	data := c.Crunch()
+	tot := data["2019-07"]["Sunny Cafe - Anyplace USA"]
+	if tot != 3432 {
+		t.Errorf("total should be %d but is %d", 3432, tot)
+	}
 }
